@@ -102,11 +102,12 @@ void fcuIO::handle_mavlink_message(const mavlink_message_t &msg)
 void fcuIO::on_new_param_received(std::string name, double value)
 {
   ROS_INFO("Got parameter %s with value %g", name.c_str(), value);
-  if(strcmp(name.c_str(), "HIL_ON"))
+  if(strcmp(name.c_str(), "HIL_ON") == 0)
   {
     if(value)
     {
       turn_on_hil();
+      ROS_WARN("Turning on HIL Simulation");
     }
     else
     {

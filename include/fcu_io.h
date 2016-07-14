@@ -20,6 +20,7 @@
 #include <sensor_msgs/Range.h>
 #include <std_srvs/Trigger.h>
 
+#include <fcu_common/Attitude.h>
 #include <fcu_common/ExtendedCommand.h>
 #include <fcu_common/ServoOutputRaw.h>
 
@@ -53,6 +54,7 @@ private:
   void handle_heartbeat_msg();
   void handle_command_ack_msg(const mavlink_message_t &msg);
   void handle_statustext_msg(const mavlink_message_t &msg);
+  void handle_attitude_msg(const mavlink_message_t &msg);
   void handle_small_imu_msg(const mavlink_message_t &msg);
   void handle_servo_output_raw_msg(const mavlink_message_t &msg);
   void handle_rc_channels_raw_msg(const mavlink_message_t &msg);
@@ -64,6 +66,7 @@ private:
 
   // ROS message callbacks
   void commandCallback(fcu_common::ExtendedCommand::ConstPtr msg);
+  void imuCallback(sensor_msgs::Imu msg);
 
   // ROS service callbacks
   bool paramGetSrvCallback(fcu_io::ParamGet::Request &req, fcu_io::ParamGet::Response &res);
@@ -77,11 +80,15 @@ private:
   {
     return value < min ? min : (value > max ? max : value);
   }
+  void turn_on_hil();
+  void turn_off_hil();
+  double start_time_;
 
 
   ros::NodeHandle nh_;
 
   ros::Subscriber command_sub_;
+  ros::Subscriber hil_imu_sub_;
 
   ros::Publisher unsaved_params_pub_;
   ros::Publisher imu_pub_;
@@ -92,6 +99,7 @@ private:
   ros::Publisher temperature_pub_;
   ros::Publisher baro_pub_;
   ros::Publisher sonar_pub_;
+  ros::Publisher attitude_pub_;
   std::map<std::string, ros::Publisher> named_value_int_pubs_;
   std::map<std::string, ros::Publisher> named_value_float_pubs_;
 

@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Dense>
+#include <string.h>
 
 #include "fcu_io.h"
 
@@ -47,6 +48,7 @@ fcuIO::fcuIO()
   std_msgs::Bool unsaved_msg;
   unsaved_msg.data = false;
   unsaved_params_pub_.publish(unsaved_msg);
+  start_time_ = ros::Time::now().toSec();
 }
 
 fcuIO::~fcuIO()
@@ -66,6 +68,9 @@ void fcuIO::handle_mavlink_message(const mavlink_message_t &msg)
     break;
   case MAVLINK_MSG_ID_STATUSTEXT:
     handle_statustext_msg(msg);
+    break;
+  case MAVLINK_MSG_ID_ATTITUDE:
+    handle_attitude_msg(msg);
     break;
   case MAVLINK_MSG_ID_SMALL_IMU:
     handle_small_imu_msg(msg);
@@ -100,6 +105,19 @@ void fcuIO::handle_mavlink_message(const mavlink_message_t &msg)
 void fcuIO::on_new_param_received(std::string name, double value)
 {
   ROS_INFO("Got parameter %s with value %g", name.c_str(), value);
+  if(strcmp(name.c_str(), "HIL_ON") == 0)
+  {
+    if(value)
+    {
+      turn_on_hil();
+      ROS_WARN("Turning on HIL Simulation");
+    }
+    else
+    {
+      turn_off_hil();
+    }
+
+  }
 }
 
 void fcuIO::on_param_value_updated(std::string name, double value)
@@ -178,6 +196,28 @@ void fcuIO::handle_statustext_msg(const mavlink_message_t &msg)
     break;
   }
 }
+
+void fcuIO::handle_attitude_msg(const mavlink_message_t &msg)
+{
+  mavlink_attitude_t attitude;
+  mavlink_msg_attitude_decode(&msg, &attitude);
+
+  fcu_common::Attitude attitude_msg;
+  attitude_msg.header.stamp = mavrosflight_->time.get_ros_time_ms(attitude.time_boot_ms);
+  attitude_msg.roll = attitude.roll;
+  attitude_msg.pitch = attitude.pitch;
+  attitude_msg.yaw = attitude.yaw;
+  attitude_msg.p = attitude.rollspeed;
+  attitude_msg.q = attitude.pitchspeed;
+  attitude_msg.r = attitude.yawspeed;
+
+  if(attitude_pub_.getTopic().empty())
+  {
+    attitude_pub_ = nh_.advertise<fcu_common::Attitude>("attitude", 1);
+  }
+  attitude_pub_.publish(attitude_msg);
+}
+
 
 void fcuIO::handle_small_imu_msg(const mavlink_message_t &msg)
 {
@@ -488,6 +528,31 @@ bool fcuIO::calibrateImuTempSrvCallback(std_srvs::Trigger::Request &req, std_srv
 
   res.success = true;
   return true;
+}
+
+void fcuIO::turn_on_hil()
+{
+  hil_imu_sub_ = nh_.subscribe("imu/data", 1, &fcuIO::imuCallback, this);
+}
+
+void fcuIO::turn_off_hil()
+{
+  hil_imu_sub_.shutdown();
+}
+
+void fcuIO::imuCallback(sensor_msgs::Imu msg)
+{
+  mavlink_message_t mavlink_msg;
+  uint32_t time_us = (uint32_t)(ros::Time::now().toSec()-start_time_)*10e6;
+  mavlink_msg_small_imu_hil_pack(1, 50, &mavlink_msg,
+                                 time_us,
+                                 msg.linear_acceleration.x,
+                                 msg.linear_acceleration.y,
+                                 msg.linear_acceleration.z,
+                                 msg.angular_velocity.x,
+                                 msg.angular_velocity.y,
+                                 msg.angular_velocity.z);
+  mavrosflight_->serial.send_message(mavlink_msg);
 }
 
 } // namespace fcu_io

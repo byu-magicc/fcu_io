@@ -66,7 +66,6 @@ private:
 
   // ROS message callbacks
   void commandCallback(fcu_common::ExtendedCommand::ConstPtr msg);
-  void imuCallback(sensor_msgs::Imu msg);
 
   // ROS service callbacks
   bool paramGetSrvCallback(fcu_io::ParamGet::Request &req, fcu_io::ParamGet::Response &res);

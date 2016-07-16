@@ -80,15 +80,10 @@ private:
   {
     return value < min ? min : (value > max ? max : value);
   }
-  void turn_on_hil();
-  void turn_off_hil();
-  double start_time_;
-
 
   ros::NodeHandle nh_;
 
   ros::Subscriber command_sub_;
-  ros::Subscriber hil_imu_sub_;
 
   ros::Publisher unsaved_params_pub_;
   ros::Publisher imu_pub_;

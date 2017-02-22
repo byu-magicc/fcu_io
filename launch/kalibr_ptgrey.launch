@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<launch>
+  <rosparam subst_value="True">
+    camera: {
+      camera_nodelet: {
+        video_mode: format7_mode1,
+        enable_trigger: true,
+        trigger_mode: mode14,
+        trigger_source: gpio2,
+        auto_shutter: false,
+        shutter_speed: 0.005,
+        trigger_polarity: 1
+      }
+    }
+  </rosparam>
+
+  <include file="$(find pointgrey_camera_driver)/launch/camera.launch">
+     <arg name="camera_serial" value="16153822"/>
+   </include>
+
+   <node name="fcu_io" pkg="fcu_io" type="fcu_io_node" output="screen">
+     <remap from="image_raw" to="/camera/image_raw"/>
+   </node>
+
+   <node name="image" pkg="image_view" type="image_view">
+    <remap from="/image" to="/camera/image_raw"/>
+  </node>
+
+
+   <node name="image_stamped" pkg="image_view" type="image_view">
+    <remap from="/image" to="/image_stamped"/>
+  </node>
+</launch>

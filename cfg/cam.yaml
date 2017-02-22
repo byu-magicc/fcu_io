@@ -1,0 +1,13 @@
+###### Camera Calibration File For Cam ######
+image_width: 644
+image_height: 482
+camera_name: cam0
+camera_matrix:
+  rows: 3
+  cols: 3
+  data: [847.238929, 0.000000, 317.109363, 0.000000, 846.887244, 198.586886, 0.000000, 0.000000, 1.000000]
+distortion_model: plumb_bob
+distortion_coefficients:
+  rows: 1
+  cols: 5
+  data:  [-0.201909, 0.146540, -0.000949, 0.000189, 0.000000]

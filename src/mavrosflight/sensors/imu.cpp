@@ -40,7 +40,7 @@ void Imu::start_temp_calibration()
   A_.clear();
 }
 
-bool Imu::calibrate_temp(mavlink_small_imu_t msg)
+bool Imu::calibrate_temp(mavlink_camera_stamped_small_imu_t msg)
 {
   if (first_time_)
   {
@@ -108,7 +108,7 @@ bool Imu::calibrate_temp(mavlink_small_imu_t msg)
   return !calibrating_;
 }
 
-bool Imu::correct(mavlink_small_imu_t msg,
+bool Imu::correct(mavlink_camera_stamped_small_imu_t msg,
                   double *xacc, double *yacc, double *zacc, double *xgyro, double *ygyro, double *zgyro, double *temp)
 {
   *xacc = msg.xacc;

@@ -41,7 +41,7 @@ public:
    * \param msg The raw IMU message
    * \return True if the calibration is done
    */
-  bool calibrate_temp(mavlink_small_imu_t msg);
+  bool calibrate_temp(mavlink_camera_stamped_small_imu_t msg);
 
   /**
    * \brief Get corrected measurement values
@@ -54,7 +54,7 @@ public:
    * \param[out] zgyro The rate gyro Z value (rad/s)
    * \return True if the measurement is valid
    */
-  bool correct(mavlink_small_imu_t msg,
+  bool correct(mavlink_camera_stamped_small_imu_t msg,
                double *xacc, double *yacc, double *zacc, double *xgyro, double *ygyro, double *zgyro, double *temperature);
 
   /// These are the publicly available versions of the accel calibration

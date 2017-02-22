@@ -8,6 +8,7 @@
 
 #include <map>
 #include <string>
+#include <queue>
 
 #include <ros/ros.h>
 
@@ -15,11 +16,13 @@
 #include <std_msgs/Float32.h>
 #include <std_msgs/Int32.h>
 #include <sensor_msgs/Imu.h>
+#include <sensor_msgs/Image.h>
 #include <sensor_msgs/FluidPressure.h>
 #include <sensor_msgs/MagneticField.h>
 #include <sensor_msgs/Temperature.h>
 #include <sensor_msgs/Range.h>
 #include <std_srvs/Trigger.h>
+#include <std_msgs/Time.h>
 
 #include <fcu_common/Attitude.h>
 #include <fcu_common/Barometer.h>
@@ -62,6 +65,7 @@ private:
   void handle_statustext_msg(const mavlink_message_t &msg);
   void handle_attitude_quaternion_msg(const mavlink_message_t &msg);
   void handle_small_imu_msg(const mavlink_message_t &msg);
+    void handle_camera_stamped_small_imu_msg(const mavlink_message_t &msg);
   void handle_servo_output_raw_msg(const mavlink_message_t &msg);
   void handle_rc_channels_raw_msg(const mavlink_message_t &msg);
   void handle_diff_pressure_msg(const mavlink_message_t &msg);
@@ -74,6 +78,7 @@ private:
 
   // ROS message callbacks
   void commandCallback(fcu_common::Command::ConstPtr msg);
+  void cameraCallback(const sensor_msgs::Image msg);
 
   // ROS service callbacks
   bool paramGetSrvCallback(fcu_io::ParamGet::Request &req, fcu_io::ParamGet::Response &res);
@@ -85,6 +90,11 @@ private:
   bool calibrateImuTempSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool calibrateRCTrimSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool rebootSrvCallback(std_srvs::Trigger::Request & req, std_srvs::Trigger::Response &res);
+
+
+  // Function to match up images and stamps
+  void stampMatch();
+
 
   // timer callbacks
   void paramTimerCallback(const ros::TimerEvent &e);
@@ -98,9 +108,11 @@ private:
   ros::NodeHandle nh_;
 
   ros::Subscriber command_sub_;
+  ros::Subscriber image_sub_;
 
   ros::Publisher unsaved_params_pub_;
   ros::Publisher imu_pub_;
+  ros::Publisher image_pub_;
   ros::Publisher imu_temp_pub_;
   ros::Publisher servo_output_raw_pub_;
   ros::Publisher rc_raw_pub_;
@@ -114,6 +126,15 @@ private:
   std::map<std::string, ros::Publisher> named_value_int_pubs_;
   std::map<std::string, ros::Publisher> named_value_float_pubs_;
   std::map<std::string, ros::Publisher> named_command_struct_pubs_;
+
+  ros::Publisher imu_time_;
+  ros::Publisher image_time_;
+
+  std::queue<ros::Time> stamp_queue;
+  std::queue<sensor_msgs::Image> image_queue;
+  std::queue<ros::Time> stamp_time_queue;
+  std::queue<ros::Time> image_time_queue;
+  bool missed_stamp;
 
   ros::ServiceServer param_get_srv_;
   ros::ServiceServer param_set_srv_;
@@ -131,6 +152,10 @@ private:
 
   mavrosflight::MavROSflight *mavrosflight_;
   mavrosflight::sensors::Imu imu_;
+
+  int time_offset;
+  double min_image_lag;
+  double max_image_lag;
 };
 
 } // namespace fcu_io

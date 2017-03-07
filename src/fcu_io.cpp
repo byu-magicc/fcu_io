@@ -86,7 +86,7 @@ void fcuIO::handle_mavlink_message(const mavlink_message_t &msg)
     case MAVLINK_MSG_ID_ATTITUDE_QUATERNION:
       handle_attitude_quaternion_msg(msg);
       break;
-    case MAVLINK_MSG_ID_SMALL_IMU:
+    case MAVLINK_MSG_ID_CAMERA_STAMPED_SMALL_IMU:
       handle_small_imu_msg(msg);
       break;
     case MAVLINK_MSG_ID_SMALL_MAG:

@@ -31,6 +31,7 @@ public:
 
   bool get_param_value(std::string name, double *value);
   bool set_param_value(std::string name, double value);
+  bool read_params();
   bool write_params();
 
   void register_param_listener(ParamListenerInterface *listener);

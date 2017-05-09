@@ -79,6 +79,23 @@ bool ParamManager::set_param_value(std::string name, double value)
   }
 }
 
+bool ParamManager::read_params()
+{
+  if (!write_request_in_progress_)
+  {
+    mavlink_message_t msg;
+    uint8_t sysid = 1;
+    uint8_t compid = 1;
+    mavlink_msg_rosflight_cmd_pack(sysid, compid, &msg, ROSFLIGHT_CMD_READ_PARAMS);
+    serial_->send_message(msg);
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
 bool ParamManager::write_params()
 {
   if (!write_request_in_progress_)
@@ -300,9 +317,26 @@ void ParamManager::handle_command_ack_msg(const mavlink_message_t &msg)
       }
       else
       {
-        ROS_INFO("Param write failed - maybe disarm the aricraft and try again?");
+        ROS_ERROR("Param write failed - maybe disarm the aricraft and try again?");
         write_request_in_progress_ = false;
-        unsaved_changes_ = true;
+      }
+    }
+
+    if (ack.command == ROSFLIGHT_CMD_READ_PARAMS)
+    {
+      if (ack.success == ROSFLIGHT_CMD_SUCCESS)
+      {
+        ROS_INFO("Param read succeeded");
+        unsaved_changes_ = false;
+
+        for (int i = 0; i < listeners_.size(); i++)
+          listeners_[i]->on_params_saved_change(unsaved_changes_);
+
+        // TODO update parameter list
+      }
+      else
+      {
+        ROS_ERROR("Param read failed - maybe disarm the aircraft and try again?");
       }
     }
   }

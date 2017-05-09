@@ -22,6 +22,7 @@ fcuIO::fcuIO()
 
   param_get_srv_ = nh_.advertiseService("param_get", &fcuIO::paramGetSrvCallback, this);
   param_set_srv_ = nh_.advertiseService("param_set", &fcuIO::paramSetSrvCallback, this);
+  param_read_srv_ = nh_.advertiseService("param_read", &fcuIO::paramReadSrvCallback, this);
   param_write_srv_ = nh_.advertiseService("param_write", &fcuIO::paramWriteSrvCallback, this);
   param_save_to_file_srv_ = nh_.advertiseService("param_save_to_file", &fcuIO::paramSaveToFileCallback, this);
   param_load_from_file_srv_ = nh_.advertiseService("param_load_from_file", &fcuIO::paramLoadFromFileCallback, this);
@@ -694,6 +695,17 @@ bool fcuIO::paramGetSrvCallback(fcu_io::ParamGet::Request &req, fcu_io::ParamGet
 bool fcuIO::paramSetSrvCallback(fcu_io::ParamSet::Request &req, fcu_io::ParamSet::Response &res)
 {
   res.exists = mavrosflight_->param.set_param_value(req.name, req.value);
+  return true;
+}
+
+bool fcuIO::paramReadSrvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
+{
+  res.success = mavrosflight_->param.read_params();
+  if (!res.success)
+  {
+    res.message = "Request rejected: write in progress";
+  }
+
   return true;
 }
 

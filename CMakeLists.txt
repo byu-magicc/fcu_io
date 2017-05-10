@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(fcu_io)
 
+# Use this to make Eigen run REALLY fast
+set(CMAKE_CXX_FLAGS "-std=c++0x -fopenmp -O3")
+
 find_package(catkin REQUIRED COMPONENTS
   cmake_modules
   fcu_common
@@ -61,9 +64,8 @@ add_library(mavrosflight
   src/mavrosflight/param_manager.cpp
   src/mavrosflight/param.cpp
   src/mavrosflight/time_manager.cpp
-  src/mavrosflight/sensors/differential_pressure.cpp
   src/mavrosflight/sensors/imu.cpp
-  src/mavrosflight/sensors/baro.cpp
+  src/mavrosflight/sensors/mag.cpp
 )
 add_dependencies(mavrosflight ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(mavrosflight
